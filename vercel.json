@@ -1,0 +1,34 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "bun run db:migrate && bun run build",
+  "routes": [
+    {
+      "src": "/(?:$|simulations(?:/.*)?|api/simulations(?:/.*)?|api/traces|atif_view(?:/.*)?)$",
+      "mitigate": { "action": "challenge" },
+      "continue": true
+    }
+  ],
+  "rewrites": [
+    { "source": "/atif_view/:open/", "destination": "/api/traces?open=:open" },
+    { "source": "/mcp/:capability", "destination": "/api/mcp/:capability" },
+    { "source": "/jobs/:path*", "destination": "/api/traces?path=/jobs/:path*" },
+    { "source": "/assets/:path*", "destination": "/api/traces?path=/assets/:path*" },
+    { "source": "/fonts/:path*", "destination": "/api/traces?path=/fonts/:path*" },
+    { "source": "/favicon.ico", "destination": "/api/traces?path=/favicon.ico" },
+    { "source": "/compare", "destination": "/api/traces?path=/compare" },
+    { "source": "/api/jobs", "destination": "/api/traces?path=/api/jobs" },
+    { "source": "/api/jobs/:path*", "destination": "/api/traces?path=/api/jobs/:path*" },
+    { "source": "/api/config", "destination": "/api/traces?path=/api/config" },
+    { "source": "/api/pricing", "destination": "/api/traces?path=/api/pricing" },
+    { "source": "/api/compare", "destination": "/api/traces?path=/api/compare" },
+    { "source": "/api/auth/status", "destination": "/api/traces?path=/api/auth/status" },
+    { "source": "/((?!api(?:/|$)|mcp(?:/|$)).*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/**/*.ts": {
+      "maxDuration": 60,
+      "includeFiles": "{configs/benchmark.json,db/0001.sql,src/arena/*.ts,src/game/*.ts,src/*.ts}"
+    }
+  }
+}

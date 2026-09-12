@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env*.local
+.vercel/
+.local/
+dist/
+coverage/
+*.log
+__pycache__/
+.venv/
+.pytest_cache/

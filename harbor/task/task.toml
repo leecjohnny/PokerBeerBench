@@ -1,0 +1,19 @@
+schema_version = "1.4"
+
+[task]
+name = "pokerbeer/full-tournament"
+version = "1.0.0"
+description = "One complete eight-player PokerBeer tournament"
+keywords = ["benchmark", "multi-agent", "poker", "beer-game"]
+
+[agent]
+timeout_sec = 172800.0
+
+[verifier]
+timeout_sec = 60.0
+environment_mode = "shared"
+
+[environment]
+docker_image = "pokerbeer-bench:local"
+network_mode = "public"
+workdir = "/app"
