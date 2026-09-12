@@ -45,9 +45,9 @@ Model calls incur costs. Harbor saves results and player trajectories in its job
 
 ## Deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fleecjohnny%2FPokerBeerBench&project-name=pokerbeer-bench&repository-name=PokerBeerBench&env=DATABASE_URL%2CARENA_MCP_URL&envDescription=A%20dedicated%20Neon%20database%20URL%20and%20your%20deployment%20URL%20with%20a%20random%20MCP%20secret.&envLink=https%3A%2F%2Fgithub.com%2Fleecjohnny%2FPokerBeerBench%23deploy)
 
-Import this repository and set these values before deploying:
+The button clones the public template and asks for `DATABASE_URL` and `ARENA_MCP_URL` before deploying. Trace-viewer settings are optional and can be added afterward.
 
 | Variable                 | Value                                                                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |

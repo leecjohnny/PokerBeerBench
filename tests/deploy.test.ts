@@ -8,11 +8,17 @@ beforeEach(() => {
   migrate.mockReset();
 });
 
-it('documents deployment prerequisites without binding to a repository', async () => {
+it('clones the public template and prompts for required deployment settings', async () => {
   const readme = await readFile('README.md', 'utf8');
-  expect(readme).toContain(
-    '[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)',
+  const button = new URL(readme.match(/\]\((https:\/\/vercel\.com\/new\/clone\?[^)]+)\)/)![1]!);
+  expect(button.searchParams.get('repository-url')).toBe(
+    'https://github.com/leecjohnny/PokerBeerBench',
   );
+  expect(button.searchParams.get('env')).toBe('DATABASE_URL,ARENA_MCP_URL');
+  expect(button.searchParams.get('envLink')).toBe(
+    'https://github.com/leecjohnny/PokerBeerBench#deploy',
+  );
+  expect(button.searchParams.has('envDefaults')).toBe(false);
   for (const variable of [
     'DATABASE_URL',
     'ARENA_MCP_URL',
