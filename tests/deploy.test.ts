@@ -117,7 +117,7 @@ it('clones the public template and prompts for required deployment settings', as
   );
   expect(button.searchParams.get('env')).toBe('DATABASE_URL,ARENA_MCP_SECRET');
   expect(button.searchParams.get('envLink')).toBe(
-    'https://github.com/leecjohnny/PokerBeerBench#deploy',
+    'https://github.com/leecjohnny/PokerBeerBench#deploy-on-vercel',
   );
   expect(button.searchParams.has('envDefaults')).toBe(false);
   for (const variable of [
