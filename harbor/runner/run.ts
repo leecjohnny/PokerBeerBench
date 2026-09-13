@@ -67,8 +67,7 @@ const payload = (response: McpResponse): Record<string, any> => {
 };
 const creatorUrl = (base: string): string => {
   const url = new URL(base);
-  if (url.search || url.hash)
-    throw new Error('ARENA_MCP_URL must not contain a query or fragment.');
+  if (url.search || url.hash) throw new Error('Operator URL must not contain a query or fragment.');
   url.search = 'create';
   return url.href;
 };

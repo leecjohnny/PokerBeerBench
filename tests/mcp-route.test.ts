@@ -15,7 +15,7 @@ vi.mock('../src/arena/vercel.js', async () => {
   const { createArenaHttp } = await import('../src/arena/mcp.ts');
   return {
     operatorUrl: new URL(fixture.operatorUrl),
-    arena: createArenaHttp(fixture.store as unknown as ArenaStore, fixture.operatorUrl),
+    arena: createArenaHttp(fixture.store as unknown as ArenaStore, new URL(fixture.operatorUrl)),
   };
 });
 const { default: route } = await import('../api/mcp/[capability].ts');

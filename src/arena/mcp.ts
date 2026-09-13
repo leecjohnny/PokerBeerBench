@@ -8,6 +8,7 @@ import {
 } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { creationSchema, maxTurnIdLength, sha256 } from '../shared.js';
+import { capabilitySchema } from './config.js';
 import { ArenaError, ArenaStore, type SeatIdentity } from './db.js';
 const empty = z.object({});
 const scalarParameters = z
@@ -170,14 +171,11 @@ function identity(auth: AuthInfo | undefined): SeatIdentity {
     throw new Error('Missing capability identity.');
   return value as SeatIdentity;
 }
-export function createArenaHttp(store: ArenaStore, configuredUrl: string) {
-  const operatorUrl = new URL(configuredUrl);
+export function createArenaHttp(store: ArenaStore, operatorUrl: URL) {
   if (operatorUrl.search || operatorUrl.hash)
-    throw new Error('ARENA_MCP_URL must not contain a query or fragment.');
+    throw new Error('Operator URL must not contain a query or fragment.');
   const prefix = operatorUrl.pathname.slice(0, operatorUrl.pathname.lastIndexOf('/') + 1);
-  const operatorCapability = operatorUrl.pathname.slice(prefix.length);
-  if (!/^[A-Za-z0-9_-]{32,}$/.test(operatorCapability))
-    throw new Error('ARENA_MCP_URL must end in a strong opaque capability.');
+  const operatorCapability = capabilitySchema.parse(operatorUrl.pathname.slice(prefix.length));
   const operatorHash = Buffer.from(sha256(operatorCapability), 'hex');
   const options = { legacy: 'stateless' as const };
   const operator = createMcpHandler(() => operatorServer(store, operatorUrl), options);
@@ -195,7 +193,7 @@ export function createArenaHttp(store: ArenaStore, configuredUrl: string) {
       if (!url.pathname.startsWith(prefix) || url.hash || (url.search && url.search !== '?create'))
         return new Response('Not found', { status: 404 });
       const capability = url.pathname.slice(prefix.length);
-      if (!/^[A-Za-z0-9_-]{32,}$/.test(capability) || capability.includes('/'))
+      if (!capabilitySchema.safeParse(capability).success)
         return new Response('Not found', { status: 404 });
       const digest = Buffer.from(sha256(capability), 'hex');
       if (timingSafeEqual(digest, operatorHash))
@@ -218,8 +216,6 @@ export function createArenaHttp(store: ArenaStore, configuredUrl: string) {
         },
       });
     },
-    async close() {
-      await Promise.all([operator.close(), player.close()]);
-    },
+    close: () => Promise.all([operator.close(), player.close()]),
   };
 }

@@ -229,7 +229,7 @@ describe('Arena MCP transport', () => {
     playerStatus: async () => ({ state: 'waiting', retry_after_ms: 30_000 }),
     getSimulation: async () => Promise.reject(new Error('Query read timeout')),
   } as unknown as ArenaStore;
-  const app = createArenaHttp(fake, operatorUrl);
+  const app = createArenaHttp(fake, new URL(operatorUrl));
   afterAll(() => app.close());
   it('serves 2026-07-28 discover, catalogs, and envelopes without sessions', async () => {
     const playerUrl = 'http://localhost/mcp/' + 'x'.repeat(43);
@@ -295,8 +295,12 @@ describe('Arena MCP transport', () => {
     });
   });
   it('serves stateless compatibility and fails closed on bad traffic', async () => {
-    expect(() => createArenaHttp(fake, operatorUrl + '?leak=1')).toThrow(/query or fragment/);
-    expect(() => createArenaHttp(fake, operatorUrl + '#leak')).toThrow(/query or fragment/);
+    expect(() => createArenaHttp(fake, new URL(operatorUrl + '?leak=1'))).toThrow(
+      /query or fragment/,
+    );
+    expect(() => createArenaHttp(fake, new URL(operatorUrl + '#leak'))).toThrow(
+      /query or fragment/,
+    );
     const playerUrl = 'http://localhost/mcp/' + 'x'.repeat(43);
     const invalid = await dispatch(app, 'http://localhost/mcp/' + 'z'.repeat(43));
     const hostile = await dispatch(app, operatorCreateUrl, {
@@ -401,7 +405,7 @@ describeDb('Postgres Arena', () => {
         client.release();
       }
     });
-  const app = createArenaHttp(store, operatorUrl);
+  const app = createArenaHttp(store, new URL(operatorUrl));
   let created: Awaited<ReturnType<ArenaStore['createSimulation']>>;
   beforeAll(async () => {
     await admin.query(`CREATE SCHEMA "${schema}"`);

@@ -1,15 +1,11 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { z } from 'zod';
+import { resolveOperatorUrl } from '../../src/arena/config.ts';
 import { creationFromConfig, creationSchema, loadConfig } from '../../src/shared.ts';
 import { runTrial, TrialFailure, type TrialDependencies } from './run.ts';
 import { errorDetails } from './atif.ts';
 const DEFAULT_INSTRUCTION = 'Play your seat through the full PokerBeerBench tournament.';
-function required(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} is required.`);
-  return value;
-}
 async function atomicJson(path: string, value: unknown): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   const temporary = `${path}.${process.pid}.tmp`;
@@ -19,7 +15,7 @@ async function atomicJson(path: string, value: unknown): Promise<void> {
 export async function main(deps?: TrialDependencies): Promise<void> {
   const configIndex = process.argv.indexOf('--config');
   const configPath = configIndex < 0 ? 'configs/benchmark.json' : process.argv[configIndex + 1]!;
-  required('OPENAI_API_KEY');
+  z.object({ OPENAI_API_KEY: z.string().min(1) }).parse(process.env);
   const reasoning = z
     .enum(['low', 'medium', 'high', 'xhigh'])
     .parse(process.env.RESPONSES_REASONING_EFFORT ?? 'medium');
@@ -31,9 +27,7 @@ export async function main(deps?: TrialDependencies): Promise<void> {
   const trajectoryPath = process.env.HARBOR_TRAJECTORY_PATH ?? '/logs/agent/trajectory.json';
   if (!process.env.RESPONSES_EVENT_LOG_DIR)
     process.env.RESPONSES_EVENT_LOG_DIR = join(dirname(trajectoryPath), 'events');
-  const arenaMcpUrl = required('ARENA_MCP_URL');
-  if (new URL(arenaMcpUrl).protocol !== 'https:')
-    throw new Error('Responses requires a public HTTPS ARENA_MCP_URL.');
+  const arenaMcpUrl = z.string().startsWith('https://').parse(resolveOperatorUrl().href);
   const profile = await loadConfig(configPath);
   const creation = process.env.TRIAL_CREATION_PATH
     ? creationSchema.parse(JSON.parse(await readFile(process.env.TRIAL_CREATION_PATH, 'utf8')))

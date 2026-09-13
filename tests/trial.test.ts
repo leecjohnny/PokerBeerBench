@@ -663,7 +663,8 @@ describe('trial entry point', () => {
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'pokerbeer-main-'));
     vi.stubEnv('OPENAI_API_KEY', 'fake-test-key');
-    vi.stubEnv('ARENA_MCP_URL', operatorUrl);
+    vi.stubEnv('ARENA_ORIGIN', new URL(operatorUrl).origin);
+    vi.stubEnv('ARENA_MCP_SECRET', new URL(operatorUrl).pathname.split('/').at(-1)!);
     vi.stubEnv('RESPONSES_MODEL', 'test-model');
     vi.stubEnv('RESPONSES_REASONING_EFFORT', 'medium');
     vi.stubEnv('HARBOR_RESULT_PATH', join(dir, 'artifacts/result.json'));
@@ -679,6 +680,21 @@ describe('trial entry point', () => {
     await rm(dir, { recursive: true });
   });
   const read = async (file: string) => JSON.parse(await readFile(join(dir, file), 'utf8'));
+  it('combines the explicit remote origin and secret for Harbor', async () => {
+    const fake = fakeDependencies();
+    const connectMcp = vi.spyOn(fake.dependencies, 'connectMcp');
+    await main(fake.dependencies);
+    expect(connectMcp).toHaveBeenCalledWith(creatorUrl, expect.any(AbortSignal));
+  });
+  it('requires an HTTPS Arena origin before making model or MCP calls', async () => {
+    vi.stubEnv('ARENA_ORIGIN', 'http://localhost:3100');
+    const fake = fakeDependencies();
+    const connectMcp = vi.spyOn(fake.dependencies, 'connectMcp');
+    const runSeat = vi.spyOn(fake.dependencies, 'runSeat');
+    await expect(main(fake.dependencies)).rejects.toThrow('https://');
+    expect(connectMcp).not.toHaveBeenCalled();
+    expect(runSeat).not.toHaveBeenCalled();
+  });
   it('writes the canonical result and separate completed harness report', async () => {
     await main(fakeDependencies().dependencies);
     const result = await read('artifacts/result.json');
